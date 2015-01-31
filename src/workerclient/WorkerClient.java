@@ -18,11 +18,13 @@ public class WorkerClient {
     private static OutputStream os = null;
     private static InputStream is = null;
     private static BufferedReader in = null;
-    private static PrintWriter out = null; 
+    private static PrintWriter out = null;
 
     public static void main(String[] args) {
         handshake();
-        //communicate();
+        if (socket != null && in != null && out != null) {
+            communicate();
+        }
     }
 
     private static void handshake() {
@@ -30,8 +32,8 @@ public class WorkerClient {
             socket = new Socket("localhost", 1234);
             os = socket.getOutputStream();
             out = new PrintWriter(os);
-            is = socket.getInputStream();            
-            in = new BufferedReader(new InputStreamReader(is));            
+            is = socket.getInputStream();
+            in = new BufferedReader(new InputStreamReader(is));
             System.out.println("Initialized the streams.");
             // ask for connection and worker's initialization
             out.println("connect");
@@ -44,11 +46,31 @@ public class WorkerClient {
             worker = new TrueWorker(id);
         } catch (IOException ex) {
             ex.printStackTrace();
+            try {
+                if (in != null) {
+                    in.close();
+                    in = null;
+                }
+                if (is != null) {
+                    is.close();
+                }
+                if (out != null) {
+                    out.close();
+                    out = null;
+                }
+                if (os != null) {
+                    os.close();
+                }
+                socket.close();
+                socket = null;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
-    
+
     private static void communicate() {
-        while(true) {
+        while (true) {
             try {
                 // do sth
                 in.read();
