@@ -27,6 +27,7 @@ public class WorkerClient {
         }
     }
 
+    // the first communication, create worker with id given from server
     private static void handshake() {
         try {
             socket = new Socket("localhost", 1234);
@@ -69,11 +70,30 @@ public class WorkerClient {
         }
     }
 
+    // the entire communication is handled by this method
     private static void communicate() {
-        while (true) {
-            try {
+        try {
+            while (true) {
                 // do sth
                 in.read();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+                if (is != null) {
+                    is.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+                if (os != null) {
+                    os.close();
+                }
+                socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
