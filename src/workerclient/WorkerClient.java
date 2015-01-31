@@ -1,10 +1,11 @@
 package workerclient;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 // this class is responsible for the connection and the communication with the server
@@ -15,9 +16,9 @@ public class WorkerClient {
     private static TrueWorker worker;
     private static Socket socket;
     private static OutputStream os = null;
-    private static ObjectOutputStream oos = null;
     private static InputStream is = null;
-    private static ObjectInputStream ois = null;
+    private static BufferedReader in = null;
+    private static PrintWriter out = null; 
 
     public static void main(String[] args) {
         handshake();
@@ -28,13 +29,16 @@ public class WorkerClient {
         try {
             socket = new Socket("localhost", 1234);
             os = socket.getOutputStream();
-            oos = new ObjectOutputStream(os);
-            is = socket.getInputStream();
-            ois = new ObjectInputStream(is);
+            out = new PrintWriter(os);
+            is = socket.getInputStream();            
+            in = new BufferedReader(new InputStreamReader(is));            
+            System.out.println("Initialized the streams.");
             // ask for connection and worker's initialization
-            oos.writeUTF("connect");
+            out.println("connect");
+            out.flush();
+            System.out.println("Sent 'connect' message.");
             // get worker's id
-            id = ois.readInt();
+            id = in.read();
             System.out.println("Connected. Known as worker #" + id + ".");
             // initialize TrueWorker
             worker = new TrueWorker(id);
@@ -46,7 +50,8 @@ public class WorkerClient {
     private static void communicate() {
         while(true) {
             try {
-                ois.readUTF();
+                // do sth
+                in.read();
             } catch (IOException e) {
                 e.printStackTrace();
             }
