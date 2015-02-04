@@ -11,33 +11,49 @@ import java.net.Socket;
 public class WorkerListener extends Thread {
 
     private Socket socket;
-    private boolean threadRunning = true;
+    private int number;
+    private String message = "sth";
+    private InputStream is = null;
+    private BufferedReader in = null;
+    private OutputStream os = null;
+    private PrintWriter out = null;
 
-    public WorkerListener(Socket s) {
+    public WorkerListener(Socket s, int num) {
         socket = s;
+        number = num;
     }
 
     @Override
     public void run() {
-        InputStream is = null;
-        BufferedReader in = null;
-        OutputStream os = null;
-        PrintWriter out = null;        
         try {
             is = socket.getInputStream();
             in = new BufferedReader(new InputStreamReader(is));
             os = socket.getOutputStream();
-            out = new PrintWriter(os);            
+            out = new PrintWriter(os);
             System.out.println("Initialized the streams.");
+            String incoming = in.readLine();
+            handshake(incoming);
             while (true) {
-                // read incoming stream
-                String request = in.readLine();
-                if (request != null) {
-                    System.out.println(request);
-                    out.write(1);
+                if (!message.equals("")) {
+                    // send message
+                    out.println("sending sth...");
                     out.flush();
-                    System.out.println("Connection established: worker #1.");
-                    // what to do?
+                    System.out.println("Sent: " + message);
+                    // set message null again
+                    message = "";
+                    incoming = in.readLine();
+                    if (incoming != null) {
+                        if (incoming.contains("get")) {
+                            // get value returned
+                            System.out.println(incoming);
+                        } else if (incoming.contains("put")) {
+                            // put action response
+                        }
+                        // what to do?
+                    } else {
+                        // kill the thread
+                        break;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -63,5 +79,19 @@ public class WorkerListener extends Thread {
             }
         }
         super.run();
+    }
+
+    // send the number to the worker as the first act of communication
+    private void handshake(String incoming) {
+        if (incoming.equals("connect")) {
+            out.write(number);
+            out.flush();
+            System.out.println("Connection established: worker #" + number + ".");
+        }
+    }
+
+    // when a get/put action required
+    public void setMessage(String msg) {
+        message = msg;
     }
 }

@@ -10,7 +10,6 @@ public class WorkerServer {
     private static final int MAX_WORKERS = 3;
     private static String request;
     private static ServerSocket serverSocket;
-    private boolean serverOn = true;
     private static WorkerListener work[];
 
     public static void main(String[] args) {
@@ -23,39 +22,41 @@ public class WorkerServer {
     }
 
     public WorkerServer() {
+        // accept communication in port 1234
         try {
             serverSocket = new ServerSocket(1234);
         } catch (IOException ioe) {
             System.out.println("Could not create server socket.");
             System.exit(-1);
         }
-        // Successfully created Server Socket. Now wait for connections.
-        while (serverOn) {
-            try {
-                // Accept incoming connections.
+        try {
+            while (true) {
+                // accept incoming connections
                 Socket clientSocket = serverSocket.accept();
-                WorkerListener cliThread = new WorkerListener(clientSocket);
+                // check if a new worker could be started
+                WorkerListener cliThread = null;
                 for (int i = 0; i < MAX_WORKERS; i++) {
                     if (work[i] == null) {
+                        cliThread = new WorkerListener(clientSocket, i);
                         work[i] = cliThread;
                         cliThread.start();
                         break;
                     }
                 }
-                if (cliThread.isAlive()) {
+                if (cliThread != null) {
                     System.out.println("Started new thread.");
                 } else {
                     System.out.println("Couldn't start new thread. There are already " + MAX_WORKERS + " workers!");
                 }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
             }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
         try {
             serverSocket.close();
             System.out.println("Server Stopped");
         } catch (Exception ioe) {
-            System.out.println("Problem stopping server socket.");
+            System.out.println("Problem stopping server socket. Exiting...");
             System.exit(-1);
         }
     }
