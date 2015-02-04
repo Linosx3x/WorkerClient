@@ -8,8 +8,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-// this class is responsible for the connection and the communication with the server
-// everything else is being done by the TrueWorker class
 public class WorkerClient {
 
     private static int id;
@@ -21,14 +19,19 @@ public class WorkerClient {
     private static PrintWriter out = null;
 
     public static void main(String[] args) {
+        new WorkerClient();
+    }
+
+    public WorkerClient() {
         handshake();
-        if (socket != null && in != null && out != null) {
-            communicate();
+        while (communicate()) {
+            // do nothing
         }
+        System.out.println("Terminating...");
     }
 
     // the first communication, create worker with id given from server
-    private static void handshake() {
+    private void handshake() {
         try {
             socket = new Socket("localhost", 1234);
             os = socket.getOutputStream();
@@ -45,58 +48,53 @@ public class WorkerClient {
             System.out.println("Connected. Known as worker #" + id + ".");
             // initialize TrueWorker
             worker = new TrueWorker(id);
+            // worker.start();
         } catch (IOException ex) {
             ex.printStackTrace();
-            try {
-                if (in != null) {
-                    in.close();
-                    in = null;
-                }
-                if (is != null) {
-                    is.close();
-                }
-                if (out != null) {
-                    out.close();
-                    out = null;
-                }
-                if (os != null) {
-                    os.close();
-                }
-                socket.close();
-                socket = null;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            cleanUp();
         }
     }
 
     // the entire communication is handled by this method
-    private static void communicate() {
+    private boolean communicate() {
         try {
-            while (true) {
-                // do sth
-                in.read();
+            String message = in.readLine();
+            if (message != null) {
+                System.out.println(message);
+                out.println("get ok");
+                out.flush();
+                return true;
+            } else {
+                return false;
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-                if (is != null) {
-                    is.close();
-                }
-                if (out != null) {
-                    out.close();
-                }
-                if (os != null) {
-                    os.close();
-                }
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            cleanUp();
+            return false;
+        }
+    }
+
+    // close socket and streams
+    private void cleanUp() {
+        try {
+            if (in != null) {
+                in.close();
+                in = null;
             }
+            if (is != null) {
+                is.close();
+            }
+            if (out != null) {
+                out.close();
+                out = null;
+            }
+            if (os != null) {
+                os.close();
+            }
+            socket.close();
+            socket = null;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
