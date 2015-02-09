@@ -12,7 +12,7 @@ public class WorkerListener extends Thread {
 
     private Socket socket;
     private int number;
-    private String message = "sth";
+    private String message = "";
     private InputStream is = null;
     private BufferedReader in = null;
     private OutputStream os = null;
@@ -36,17 +36,17 @@ public class WorkerListener extends Thread {
             while (true) {
                 if (!message.equals("")) {
                     // send message
-                    out.println("sending sth...");
+                    out.println(message);
                     out.flush();
                     System.out.println("Sent: " + message);
                     // set message null again
                     message = "";
                     incoming = in.readLine();
                     if (incoming != null) {
-                        if (incoming.contains("get")) {
+                        if (incoming.startsWith("get")) {
                             // get value returned
                             System.out.println(incoming);
-                        } else if (incoming.contains("put")) {
+                        } else if (incoming.startsWith("put")) {
                             // put action response
                         }
                         // what to do?
@@ -91,7 +91,11 @@ public class WorkerListener extends Thread {
     }
 
     // when a get/put action required
-    public void setMessage(String msg) {
-        message = msg;
+    public boolean setMessage(String msg) {
+        if (message.equals("")) {
+            message = msg;
+            return true;
+        }
+        return false;
     }
 }
