@@ -65,6 +65,7 @@ public class WorkerClient {
                 out.flush();
                 return true;
             } else {
+                cleanUp();
                 return false;
             }
         } catch (IOException e) {

@@ -15,6 +15,7 @@ public class TrueWorker extends Thread {
     private String filename = "worker";
     private Map<String, String> parameters = new HashMap<>();
     private File keyValPairs;
+    private String message = "";
 
     // create the worker
     public TrueWorker(int id) {
@@ -25,7 +26,18 @@ public class TrueWorker extends Thread {
 
     @Override
     public void run() {
-        while (true) {}
+        while (true) {
+            if (!message.equals("")) {
+                if (message.startsWith("get")) {
+                    get(message);
+                } else if (message.startsWith("put")) {
+                    put(message, message);
+                } else {
+                    System.out.println("Wrong message received! Done nothing.");
+                }
+                message = "";
+            }
+        }
     }
 
     @Override
@@ -44,8 +56,31 @@ public class TrueWorker extends Thread {
         super.start();
     }
 
+    // set the message given from server
+    public boolean setMessage(String msg) {
+        if (message.equals("")) {
+            message = msg;
+            return true;
+        }
+        return false;
+    }
+    
+    // handles the get operation
+    private String get(String key) {
+        String value = null;
+        if (parameters.containsKey(key)) {
+            return parameters.get(key);
+        }
+        return null;
+    }
+    
+    // handles the put operation
+    private void put(String key, String value) {
+        parameters.put(key, value);
+    }
+    
     private boolean readFile() {
-        // check if file exists
+        // check if file doesn't exist
         if (!(keyValPairs.exists())) {
             try {
                 keyValPairs.createNewFile();
