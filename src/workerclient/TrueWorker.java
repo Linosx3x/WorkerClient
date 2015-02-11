@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 public class TrueWorker extends Thread {
 
@@ -16,6 +17,7 @@ public class TrueWorker extends Thread {
     private Map<String, String> parameters = new HashMap<>();
     private File keyValPairs;
     private String message = "";
+    private String response = "";
 
     // create the worker
     public TrueWorker(int id) {
@@ -29,9 +31,16 @@ public class TrueWorker extends Thread {
         while (true) {
             if (!message.equals("")) {
                 if (message.startsWith("get")) {
-                    get(message);
+                    StringTokenizer token = new StringTokenizer(message);
+                    token.nextToken(" ");
+                    String key = token.nextToken();
+                    get(key);
                 } else if (message.startsWith("put")) {
-                    put(message, message);
+                    StringTokenizer token = new StringTokenizer(message);
+                    token.nextToken(" ");
+                    String key = token.nextToken(" ");
+                    String value = token.nextToken();
+                    put(key, value);
                 } else {
                     System.out.println("Wrong message received! Done nothing.");
                 }
@@ -64,21 +73,32 @@ public class TrueWorker extends Thread {
         }
         return false;
     }
-    
-    // handles the get operation
-    private String get(String key) {
-        String value = null;
-        if (parameters.containsKey(key)) {
-            return parameters.get(key);
+
+    // get the response
+    public String getResponse() {
+        String tmp = "";
+        if (!response.equals("")) {
+            tmp = response;
+            response = "";
         }
-        return null;
+        return tmp;
     }
-    
+
+    // handles the get operation
+    private void get(String key) {
+        // String value = null;
+        if (parameters.containsKey(key)) {
+            response = parameters.get(key);
+        }
+        response = null;
+    }
+
     // handles the put operation
     private void put(String key, String value) {
         parameters.put(key, value);
+        response = "ACK";
     }
-    
+
     private boolean readFile() {
         // check if file doesn't exist
         if (!(keyValPairs.exists())) {
@@ -106,4 +126,3 @@ public class TrueWorker extends Thread {
         return true;
     }
 }
-

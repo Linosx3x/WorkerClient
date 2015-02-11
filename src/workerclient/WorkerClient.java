@@ -28,6 +28,7 @@ public class WorkerClient {
             // do nothing
         }
         System.out.println("Terminating...");
+        System.exit(0);
     }
 
     // the first communication, create worker with id given from server
@@ -48,7 +49,7 @@ public class WorkerClient {
             System.out.println("Connected. Known as worker #" + id + ".");
             // initialize TrueWorker
             worker = new TrueWorker(id);
-            // worker.start();
+            worker.start();
         } catch (IOException ex) {
             ex.printStackTrace();
             cleanUp();
@@ -60,9 +61,19 @@ public class WorkerClient {
         try {
             String message = in.readLine();
             if (message != null) {
-                System.out.println(message);
-                out.println("get ok");
+                boolean set;
+                String response;
+                System.out.println("Received message: " + message);
+                do {
+                    set = worker.setMessage(message);
+                } while (!set);
+                System.out.println("Received request: " + message);
+                do {
+                    response = worker.getResponse();
+                } while (response.equals("") || response == null);             
+                out.println(response);
                 out.flush();
+                System.out.println("Sent response: " + response);
                 return true;
             } else {
                 cleanUp();
