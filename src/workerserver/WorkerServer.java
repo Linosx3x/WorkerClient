@@ -95,9 +95,9 @@ public class WorkerServer {
                     param = pairs[1].split("=");
                     if (param.length > 1) {
                         value = URLDecoder.decode(param[1], System.getProperty("file.encoding"));
-                        put(key, value);
+                        String response = put(key, value);
                         if (success) {
-                            return "ok";
+                            return response;
                         }
                     } else {
                         return "  <head>\n"
@@ -125,27 +125,50 @@ public class WorkerServer {
     }
 
     private String get(String key) {
-        /*String result = new String();
-         if (parameters.containsKey(key)) {
-         this.success = true;
-         this.type = "get";
-         return parameters.get(key);
-         } else {
-         return "Key not found";
-         }*/
-        return null;
+        //String result = new String();
+        //if (parameters.containsKey(key)) {
+        if (true) {
+            String response;
+            String request = "get " + key;
+            this.success = true;
+            this.type = "get";
+            // while it is false, try again to set the message
+            while (!work[0].setMessage(request)) {
+            }
+            System.out.println("Sent request: " + request);
+            do {
+                response = work[0].getResponse();
+            } while (response.equals(""));
+            System.out.println("Got response: " + response);
+            return response;
+            //return parameters.get(key);
+        } else {
+            return "Key not found";
+        }
     }
 
-    private void put(String key, String value) {
+    private String put(String key, String value) {
         /*String result = null;
          try {
          PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(keyValPairs, true)));
          out.print(key + "=" + value + "\n");
          out.close();
-         parameters.put(key, value);
-         this.type = "put";
-         this.success = true;
-         } catch (IOException ex) {
+         parameters.put(key, value);*/
+        this.type = "put";
+        this.success = true;
+        boolean set;
+        String response;
+        String request = "put " + key + " " + value;
+        do {
+            set = work[0].setMessage(request);
+        } while (!set);
+        System.out.println("Sent request: " + request);
+        do {
+            response = work[0].getResponse();
+        } while (response.equals(""));
+        System.out.println("Got response: " + response);
+        return response;
+        /*} catch (IOException ex) {
          Logger.getLogger(RestServer.class.getName()).log(Level.SEVERE, null, ex);
          }*/
     }

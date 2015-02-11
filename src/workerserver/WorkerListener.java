@@ -13,6 +13,7 @@ public class WorkerListener extends Thread {
     private Socket socket;
     private int number;
     private String message = "";
+    private String response = "";
     private InputStream is = null;
     private BufferedReader in = null;
     private OutputStream os = null;
@@ -33,9 +34,11 @@ public class WorkerListener extends Thread {
             System.out.println("Initialized the streams.");
             String incoming = in.readLine();
             handshake(incoming);
+            incoming = "";
             while (true) {
                 if (!message.equals("")) {
                     // send message
+                    System.out.println("Sent: " + message);
                     out.println(message);
                     out.flush();
                     System.out.println("Sent: " + message);
@@ -46,6 +49,10 @@ public class WorkerListener extends Thread {
                         if (incoming.startsWith("get")) {
                             // get value returned
                             System.out.println(incoming);
+                            while (!response.equals("")) {
+                                // do nothing
+                            }
+                            response = incoming;
                         } else if (incoming.startsWith("put")) {
                             // put action response
                         }
@@ -77,8 +84,8 @@ public class WorkerListener extends Thread {
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
+            System.out.println("Worker #" + number + " terminated.");
         }
-        super.run();
     }
 
     // send the number to the worker as the first act of communication
@@ -97,5 +104,15 @@ public class WorkerListener extends Thread {
             return true;
         }
         return false;
+    }
+
+    // when a response is needed
+    public String getResponse() {
+        String tmp = "";
+        if (!response.equals("")) {
+            tmp = response;
+            response = "";
+        }
+        return tmp;
     }
 }
