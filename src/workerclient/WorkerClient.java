@@ -67,10 +67,10 @@ public class WorkerClient {
                 do {
                     set = worker.setMessage(message);
                 } while (!set);
-                System.out.println("Received request: " + message);
+                System.out.println("Set request.");
                 do {
                     response = worker.getResponse();
-                } while (response.equals("") || response == null);             
+                } while (response.equals(""));
                 out.println(response);
                 out.flush();
                 System.out.println("Sent response: " + response);

@@ -30,6 +30,9 @@ public class TrueWorker extends Thread {
     public void run() {
         while (true) {
             if (!message.equals("")) {
+                System.out.println("Message is: " + message);
+            }
+            if (!message.equals("")) {
                 if (message.startsWith("get")) {
                     StringTokenizer token = new StringTokenizer(message);
                     token.nextToken(" ");
@@ -89,8 +92,9 @@ public class TrueWorker extends Thread {
         // String value = null;
         if (parameters.containsKey(key)) {
             response = parameters.get(key);
+        } else {
+            response = "Not found!";
         }
-        response = null;
     }
 
     // handles the put operation
