@@ -34,14 +34,16 @@ public class WorkerListener extends Thread {
             System.out.println("Initialized the streams.");
             String incoming = in.readLine();
             handshake(incoming);
-            incoming = "";
+            incoming = null;
             while (true) {
                 if (!message.equals("")) {
+                    System.out.println("Message set.");
+                }
+                if (!message.equals("")) {
                     // send message
-                    System.out.println("Sent: " + message);
                     out.println(message);
                     out.flush();
-                    System.out.println("Sent: " + message);
+                    System.out.println("Message sent.");
                     // set message null again
                     message = "";
                     incoming = in.readLine();
@@ -55,6 +57,11 @@ public class WorkerListener extends Thread {
                             response = incoming;
                         } else if (incoming.startsWith("put")) {
                             // put action response
+                            System.out.println(incoming);
+                            while (!response.equals("")) {
+                                // do nothing
+                            }
+                            response = incoming;
                         }
                         // what to do?
                     } else {
@@ -109,7 +116,7 @@ public class WorkerListener extends Thread {
     // when a response is needed
     public String getResponse() {
         String tmp = "";
-        if (!response.equals("")) {
+        if (response.equals("")) {
             tmp = response;
             response = "";
         }
