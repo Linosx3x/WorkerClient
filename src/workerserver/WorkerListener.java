@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class WorkerListener extends Thread {
 
@@ -60,7 +61,9 @@ public class WorkerListener extends Thread {
                     }
                 }
             }
-        } catch (Exception e) {
+        }catch(SocketException e) {
+            System.out.println("Worker is down for mainten\n");
+        }catch (Exception e) {
             e.printStackTrace();
         } finally {
             // clean up

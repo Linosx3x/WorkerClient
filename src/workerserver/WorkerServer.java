@@ -9,7 +9,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 
 public class WorkerServer {
 
@@ -20,12 +22,16 @@ public class WorkerServer {
     private static WorkerListener work[];
     private String type;
     private boolean success;
+    private ArrayList<KeyWorkersPair> list = new ArrayList<KeyWorkersPair>();
+    private static int workersScheduling[];
 
     public static void main(String[] args) {
-        // initialize work[] table
+        // initialize work[] & workersScheduling[] table
         work = new WorkerListener[MAX_WORKERS];
+        workersScheduling = new int[MAX_WORKERS];
         for (int i = 0; i < MAX_WORKERS; i++) {
             work[i] = null;
+            workersScheduling[i] = -1;
         }
         new WorkerServer();
     }
@@ -52,6 +58,7 @@ public class WorkerServer {
                     if (work[i] == null || !work[i].isAlive()) {
                         cliThread = new WorkerListener(clientSocket, i);
                         work[i] = cliThread;
+                        workersScheduling[i] = 0;
                         cliThread.start();
                         break;
                     }
@@ -96,7 +103,9 @@ public class WorkerServer {
                     if (param.length > 1) {
                         value = URLDecoder.decode(param[1], System.getProperty("file.encoding"));
                         String response = put(key, value);
-                        if (success) {
+                        if (response!=null && !response.equals("WD")) {
+                            return response;
+                        } else if(response.equals("WD")||response.equals("AD")) {
                             return response;
                         }
                     } else {
@@ -158,17 +167,31 @@ public class WorkerServer {
          parameters.put(key, value);*/
         this.type = "put";
         this.success = true;
-        boolean set;
-        String response;
+        boolean set,set2;
+        String response="0";
+        int counter=0;
+        int[] min = {-1,-1};
         String request = "put " + key + " " + value;
+        // calls algorithm, returns 2 workers
         do {
-            set = work[0].setMessage(request);
-        } while (!set);
-        System.out.println("Sent request: " + request);
+            min=schedulingAlgorithm();
+            counter++;
+        }while((min[0]==-1||min[1]==-1)&&counter<=5);
+        if(counter >5)
+        {
+            return "AD";
+        }
         do {
-            response = work[0].getResponse();
-        } while (response == null);
+            set = work[min[0]].setMessage(request);
+           } while (!set);
+           System.out.println("Sent request: " + request + " to worker number: " + min[0]);
+        do {
+            response = work[min[0]].getResponse();
+        } while (response.equals("0"));
         System.out.println("Got response: " + response);
+        if(response==null) {
+            return "WD";
+        }
         return response;
         /*} catch (IOException ex) {
          Logger.getLogger(RestServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -185,6 +208,9 @@ public class WorkerServer {
             String request = t.getRequestURI().getQuery();
             if (request != null) {
                 result = parseQuery(request);
+                if(result==null||result.equals("AD")||result.equals("WD")) {
+                    success=false;
+                }
                 if (success && type.equalsIgnoreCase("put")) {
                     response = "  <head>\n"
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
@@ -194,9 +220,15 @@ public class WorkerServer {
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
                 } else if (!(success)) {
-                    response = "  <head>\n"
+                    if(result.equals("AD")) {
+                        response="  <head>\n"
+                                + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
+                                + "</head> Unfortunately all workers are down";
+                    }else {
+                        response = "  <head>\n"
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
+                    }
                 }
             } else {
                 response = "<!DOCTYPE html>\n" + "<html>\n" + "<body>\n" + "\n"
@@ -214,5 +246,44 @@ public class WorkerServer {
             os.write(response.getBytes());
             os.close();
         }
+    }
+
+    // the algorithm that decides which workers will accept the new key-value pair
+    private int[] schedulingAlgorithm() {
+        int[] tmp = new int[2];
+        int min = -1, sec_min = -1;
+        for (int i = 0; i < MAX_WORKERS; i++) {
+            if(min==-1) {
+                if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min+1].isAlive()) {
+                    if (workersScheduling[i] < workersScheduling[min+1]) {
+                        sec_min = min+1;
+                        min = i;
+                    } else if (workersScheduling[i] == workersScheduling[min+1]) {
+                        sec_min = i;
+                    } else {
+                        if (workersScheduling[i] < workersScheduling[sec_min]) {
+                            sec_min = i;
+                        }
+                    }
+                }
+            }
+            if(min!=-1) {
+                if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min].isAlive()) {
+                    if (workersScheduling[i] < workersScheduling[min]) {
+                        sec_min = min;
+                        min = i;
+                    } else if (workersScheduling[i] == workersScheduling[min]) {
+                        sec_min = i;
+                    } else {
+                        if (workersScheduling[i] < workersScheduling[sec_min]) {
+                            sec_min = i;
+                        }
+                    }
+                }
+            }
+        }
+        tmp[0] = min;
+        tmp[1] = sec_min;
+        return tmp;
     }
 }
