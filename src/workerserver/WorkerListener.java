@@ -36,9 +36,9 @@ public class WorkerListener extends Thread {
             handshake(incoming);
             incoming = null;
             while (true) {
-                if (!message.equals("")) {
-                    System.out.println("Message set.");
-                }
+                /* if (!message.equals("")) {
+                 System.out.println("Message set.");
+                 }*/
                 if (!message.equals("")) {
                     // send message
                     out.println(message);
@@ -47,25 +47,15 @@ public class WorkerListener extends Thread {
                     // set message null again
                     message = "";
                     incoming = in.readLine();
+                    System.out.println("Message received: " + incoming);
                     if (incoming != null) {
-                        if (incoming.startsWith("get")) {
-                            // get value returned
-                            System.out.println(incoming);
-                            while (!response.equals("")) {
-                                // do nothing
-                            }
-                            response = incoming;
-                        } else if (incoming.startsWith("put")) {
-                            // put action response
-                            System.out.println(incoming);
-                            while (!response.equals("")) {
-                                // do nothing
-                            }
-                            response = incoming;
+                        System.out.println("Worker response: " + incoming + "\n");
+                        while (!response.equals("")) {
+                            // do nothing
                         }
-                        // what to do?
+                        response = incoming;
                     } else {
-                        // kill the thread
+
                         break;
                     }
                 }
@@ -116,7 +106,7 @@ public class WorkerListener extends Thread {
     // when a response is needed
     public String getResponse() {
         String tmp = "";
-        if (response.equals("")) {
+        if (!(response.equals(""))) {
             tmp = response;
             response = "";
         }

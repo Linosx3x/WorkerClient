@@ -20,7 +20,7 @@ public class WorkerServer {
     private static WorkerListener work[];
     private String type;
     private boolean success;
-    
+
     public static void main(String[] args) {
         // initialize work[] table
         work = new WorkerListener[MAX_WORKERS];
@@ -29,7 +29,7 @@ public class WorkerServer {
         }
         new WorkerServer();
     }
-    
+
     public WorkerServer() {
         // accept communication in port 1234
         try {
@@ -73,14 +73,14 @@ public class WorkerServer {
             System.exit(-1);
         }
     }
-    
+
     private void start() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
         server.createContext("/store", new MyHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
     }
-    
+
     private String parseQuery(String query) {
         String result = new String();
         if (query != null) {
@@ -111,7 +111,7 @@ public class WorkerServer {
                     if (success) {
                         return result;
                     }
-                    
+
                 } else {
                     this.success = false;
                     return "You entered something wrong";
@@ -123,7 +123,7 @@ public class WorkerServer {
         }
         return result;
     }
-    
+
     private String get(String key) {
         //String result = new String();
         //if (parameters.containsKey(key)) {
@@ -148,7 +148,7 @@ public class WorkerServer {
             return "Key not found";
         }
     }
-    
+
     private String put(String key, String value) {
         /*String result = null;
          try {
@@ -167,7 +167,7 @@ public class WorkerServer {
         System.out.println("Sent request: " + request);
         do {
             response = work[0].getResponse();
-        } while (response.equals(""));
+        } while (response == null);
         System.out.println("Got response: " + response);
         return response;
         /*} catch (IOException ex) {
@@ -177,7 +177,7 @@ public class WorkerServer {
     //test
 
     class MyHandler implements HttpHandler {
-        
+
         @Override
         public void handle(HttpExchange t) throws IOException {
             String result = "";
