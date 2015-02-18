@@ -201,9 +201,6 @@ public class WorkerServer {
                 set = work[min[i]].setMessage(request);
             } while (!set);
             System.out.println("Sent request: " + request + " to worker number: " + min[i]);
-            String tmp;
-            boolean worker1OK=false;
-            boolean worker2OK=false;
             boolean addedKey=false;
             do {
                     response = work[min[i]].getResponse();
@@ -212,7 +209,6 @@ public class WorkerServer {
                 }
             }while (response.equals(""));
             if(!(response.equals("An error occurred"))) {
-                    tmp=response;
                     if(pos<list.size()&&pos>=0) {
                         if(list.get(pos).getWorker2()==-1) {
                             list.get(pos).setWorker2(min[i]);
@@ -226,11 +222,7 @@ public class WorkerServer {
                             if((list.get(j).getWorker1()>=MAX_WORKERS||list.get(j).getWorker1()<0)&&i==0)
                             {
                                 list.get(j).setWorker1(min[i]);
-                                worker1OK=true;
-                                break;
-                            }else if(list.get(j).getWorker2()>=MAX_WORKERS||list.get(j).getWorker2()<0) {
-                                list.get(j).setWorker2(min[i]);
-                                worker2OK=true;
+                                pos=j;
                                 break;
                             }
                         }
@@ -238,8 +230,8 @@ public class WorkerServer {
                     if(!addedKey) {
                         if(i==0) {
                             list.add(new KeyWorkersPair(key,min[i],-1));
+                            pos=list.size()-1;
                         }
-                         response=("");
                          addedKey=true;
                     }
             }
