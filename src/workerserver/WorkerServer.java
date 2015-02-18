@@ -142,28 +142,73 @@ public class WorkerServer {
         //String result = new String();
         //if (parameters.containsKey(key)) {
         if (true) {
-            String response;
+            String response = null;
             boolean set;
             String request = "get " + key;
             this.success = true;
             this.type = "get";
-            // while it is false, try again to set the message
-            do {
-                set = work[0].setMessage(request);
-            } while (!set);
-            System.out.println("Sent request: " + request);
-            do {
-                response = work[0].getResponse();
-                if (!work[0].isAlive()) {
-                    response = "An error occurred";
+            int[] workers = {-1, -1};
+            String[] responses = new String[2];
+            for (int i = 0; i < list.size(); i++) {
+                if (key.equals(list.get(i).getKey())) {
+                    workers[0] = list.get(i).getWorker1();
+                    workers[1] = list.get(i).getWorker2();
+                    break;
                 }
-            } while (response.equals(""));
-            System.out.println("Got response: " + response + "\n");
+            }
+            // while it is false, try again to set the message
+            for (int i = 0; i < workers.length; i++) {
+                do {
+                    set = work[workers[i]].setMessage(request);
+                } while (!set);
+                System.out.println("Sent request: " + request);
+                do {
+                    response = work[workers[i]].getResponse();
+                    if (!work[workers[i]].isAlive()) {
+                        response = "An error occured";
+                    }
+                } while (response.equals(""));
+                System.out.println("Got response from " + workers[i] + " is: " + response + "\n");
+                responses[i] = response;
+            }
+            if (!(responses[0].equals(responses[1]))) {
+                if (responses[0].equals("An error occured")) {
+                        return responses[1];
+                } else {
+                    if (responses[1].equals("An error occured")) {
+                        return responses[0];
+                    }
+                }
+                if (work[workers[0]].getUptime() > work[workers[1]].getUptime()) {
+                    response = responses[0];
+                    update(key, response, workers[1]);
+                } else {
+                    response = responses[1];
+                    update(key, response, workers[0]);
+                }
+            }
             return response;
             //return parameters.get(key);
         } else {
             return "Key not found";
         }
+    }
+
+    private boolean update(String key, String response, int worker) {
+        boolean set = false;
+        String request = "put " + key + " " + response;
+        do {
+            set = work[worker].setMessage(request);
+        } while (!set);
+        System.out.println("Sent update request: " + request + " to worker number: " + worker);
+        do {
+            response = work[worker].getResponse();
+            if (!work[worker].isAlive()) {
+                response = "An error occurred";
+                set = false;
+            }
+        } while (response.equals(""));
+        return set;
     }
 
     private String put(String key, String value) {
@@ -192,6 +237,7 @@ public class WorkerServer {
         }
         int pos = -1;
         boolean keyExists = false;
+        String[] responses = new String[2];
         for (int i = 0; i < 2; i++) {
             // it's not alive and you know it!
             if (max[i] == -1) {
@@ -204,7 +250,6 @@ public class WorkerServer {
             do {
                 response = work[max[i]].getResponse();
                 if (!work[max[i]].isAlive()) {
-                    work[0].getPriority();
                     response = "An error occurred";
                 }
             } while (response.equals(""));
@@ -216,7 +261,7 @@ public class WorkerServer {
                 } else {
                     for (int j = 0; j < list.size(); j++) {
                         if (list.get(j).getKey().equals(key)) {
-                            //wor[0]=true;
+                            //wor[0]=true; 
                             if ((list.get(j).getWorker1() >= MAX_WORKERS || list.get(j).getWorker1() < 0) && i == 0) {
                                 list.get(j).setWorker1(max[i]);
                                 pos = j;
@@ -234,7 +279,16 @@ public class WorkerServer {
                     }
                 }
             }
-
+            responses[i] = response;
+        }
+        if (!(responses[0].equals(responses[1]))) {
+            if (responses[0].equals("An error occured")) {
+                    System.out.println("Got response: " + responses[1] + "\n");
+                    return responses[1];
+                } else {
+                    System.out.println("Got response: " + responses[0] + "\n");
+                    return responses[0];
+            }
         }
         System.out.println("Got response: " + response + "\n");
         /*if (response == null) {
@@ -357,7 +411,7 @@ public class WorkerServer {
         }
         if (tmp[1] != -1 || (tmp[0] != -1 && tmp[1] != -1)) {
             for (int i = 0; i < work.length; i++) {
-                if (work[i]!=null&&work[i].isAlive() && i != max && i != sec_max) {
+                if (work[i] != null && work[i].isAlive() && i != max && i != sec_max) {
                     work[i].incPR();
                 }
             }

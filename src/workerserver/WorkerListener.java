@@ -20,10 +20,12 @@ public class WorkerListener extends Thread {
     private OutputStream os = null;
     private PrintWriter out = null;
     private int pr=0;
+    private long startTime;
 
     public WorkerListener(Socket s, int num) {
         socket = s;
         number = num;
+        startTime=System.currentTimeMillis()/1000;
     }
 
     @Override
@@ -127,5 +129,8 @@ public class WorkerListener extends Thread {
     /*public void setPr(int pr) {
         this.pr = pr;
     }*/
-    
+    public long getUptime()
+    {
+        return (System.currentTimeMillis()/1000)-startTime;
+    }
 }
