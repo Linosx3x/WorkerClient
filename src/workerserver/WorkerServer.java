@@ -50,7 +50,7 @@ public class WorkerServer {
             success = false;
             this.start();
             while (true) {
-                // accept incoming connections
+                // accept incomaxg connections
                 Socket clientSocket = serverSocket.accept();
                 // check if a new worker could be started
                 WorkerListener cliThread = null;
@@ -177,57 +177,57 @@ public class WorkerServer {
         this.success = true;
         boolean set, set2;
         String response = "";
-        int counter = 0;
-        int[] min = new int[2];
+        int[] max = new int[2];
         String request = "put " + key + " " + value;
         // calls algorithm, returns 2 workers
         //do {
-        min = schedulingAlgorithm();
+        max = schedulingAlgorithm();
         /*    counter++;
-         } while ((min[0] == -1 || min[1] == -1) && counter <= 5);
+         } while ((max[0] == -1 || max[1] == -1) && counter <= 5);
          if (counter > 5) {
          return "AD";
          }*/
-        if (min[0] == min[1]) {
-            min[1] = -1;
+        if (max[0] == max[1]) {
+            max[1] = -1;
         }
         int pos = -1;
+        boolean keyExists = false;
         for (int i = 0; i < 2; i++) {
             // it's not alive and you know it!
-            if (min[i] == -1) {
+            if (max[i] == -1) {
                 break;
             }
             do {
-                set = work[min[i]].setMessage(request);
+                set = work[max[i]].setMessage(request);
             } while (!set);
-            System.out.println("Sent request: " + request + " to worker number: " + min[i]);
-            boolean keyExists = false;
+            System.out.println("Sent request: " + request + " to worker number: " + max[i]);
             do {
-                response = work[min[i]].getResponse();
-                if (!work[min[i]].isAlive()) {
+                response = work[max[i]].getResponse();
+                if (!work[max[i]].isAlive()) {
+                    work[0].getPriority();
                     response = "An error occurred";
                 }
             } while (response.equals(""));
             if (!(response.equals("An error occurred"))) {
                 if (pos < list.size() && pos >= 0) {
                     if (list.get(pos).getWorker2() == -1) {
-                        list.get(pos).setWorker2(min[i]);
+                        list.get(pos).setWorker2(max[i]);
                     }
                 } else {
                     for (int j = 0; j < list.size(); j++) {
                         if (list.get(j).getKey().equals(key)) {
                             //wor[0]=true;
                             if ((list.get(j).getWorker1() >= MAX_WORKERS || list.get(j).getWorker1() < 0) && i == 0) {
-                                list.get(j).setWorker1(min[i]);
+                                list.get(j).setWorker1(max[i]);
                                 pos = j;
-                                keyExists=true;
+                                keyExists = true;
                                 break;
                             }
                         }
                     }
                     if (!keyExists) {
                         if (i == 0) {
-                            list.add(new KeyWorkersPair(key, min[i], -1));
+                            list.add(new KeyWorkersPair(key, max[i], -1));
                             pos = list.size() - 1;
                         }
                         keyExists = true;
@@ -298,64 +298,69 @@ public class WorkerServer {
     // the algorithm that decides which workers will accept the new key-value pair
     private int[] schedulingAlgorithm() {
         int[] tmp = new int[2];
-        /*int min = -1, sec_min = -1;
+        /*int max = -1, sec_max = -1;
          for (int i = 0; i < MAX_WORKERS; i++) {
-         if(min==-1) {
-         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min+1].isAlive()) {
-         if (workersScheduling[i] < workersScheduling[min+1]) {
-         sec_min = min+1;
-         min = i;
-         } else if (workersScheduling[i] == workersScheduling[min+1]) {
-         sec_min = i;
+         if(max==-1) {
+         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[max+1].isAlive()) {
+         if (workersScheduling[i] < workersScheduling[max+1]) {
+         sec_max = max+1;
+         max = i;
+         } else if (workersScheduling[i] == workersScheduling[max+1]) {
+         sec_max = i;
          } else {
-         if (workersScheduling[i] < workersScheduling[sec_min]) {
-         sec_min = i;
+         if (workersScheduling[i] < workersScheduling[sec_max]) {
+         sec_max = i;
          }
          }
          }
          }
-         if(min!=-1) {
-         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min].isAlive()) {
-         if (workersScheduling[i] < workersScheduling[min]) {
-         sec_min = min;
-         min = i;
-         } else if (workersScheduling[i] == workersScheduling[min]) {
-         sec_min = i;
+         if(max!=-1) {
+         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[max].isAlive()) {
+         if (workersScheduling[i] < workersScheduling[max]) {
+         sec_max = max;
+         max = i;
+         } else if (workersScheduling[i] == workersScheduling[max]) {
+         sec_max = i;
          } else {
-         if (workersScheduling[i] < workersScheduling[sec_min]) {
-         sec_min = i;
+         if (workersScheduling[i] < workersScheduling[sec_max]) {
+         sec_max = i;
          }
          }
          }
          }
          }*/
-        int min = 0, sec_min = 0;
-        for (int i = 0; i < MAX_WORKERS; i++) {
-            if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive()) {
-                if (workersScheduling[i] < workersScheduling[min]) {
-                    sec_min = min;
-                    min = i;
-                } else if (workersScheduling[i] == workersScheduling[min]) {
-                    sec_min = i;
+        int max = 0, sec_max = 0;
+        for (int i = 0; i < work.length; i++) {
+            if (work[i] != null && work[i].isAlive()) {
+                if (work[i].getPR() > work[max].getPR()) {
+                    sec_max = max;
+                    max = i;
+                } else if (work[i].getPR() == work[max].getPR()) {
+                    sec_max = i;
                 } else {
-                    if (workersScheduling[i] < workersScheduling[sec_min]) {
-                        sec_min = i;
+                    if (work[i].getPR() > work[sec_max].getPR()) {
+                        sec_max = i;
                     }
                 }
-            } else {
-                workersScheduling[i] = -1;
             }
         }
         // leaves out the pre-set value if none alive
-        if (work[min].isAlive()) {
-            tmp[0] = min;
+        if (work[max].isAlive()) {
+            tmp[0] = max;
         } else {
             tmp[0] = -1;
         }
-        if (work[sec_min].isAlive()) {
-            tmp[1] = sec_min;
+        if (work[sec_max].isAlive()) {
+            tmp[1] = sec_max;
         } else {
             tmp[1] = -1;
+        }
+        if (tmp[1] != -1 || (tmp[0] != -1 && tmp[1] != -1)) {
+            for (int i = 0; i < work.length; i++) {
+                if (work[i]!=null&&work[i].isAlive() && i != max && i != sec_max) {
+                    work[i].incPR();
+                }
+            }
         }
         return tmp;
     }

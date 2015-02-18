@@ -19,6 +19,7 @@ public class WorkerListener extends Thread {
     private BufferedReader in = null;
     private OutputStream os = null;
     private PrintWriter out = null;
+    private int pr=0;
 
     public WorkerListener(Socket s, int num) {
         socket = s;
@@ -101,6 +102,7 @@ public class WorkerListener extends Thread {
     public boolean setMessage(String msg) {
         if (message.equals("")) {
             message = msg;
+            this.pr=0;//priority reduced to minimum
             return true;
         }
         return false;
@@ -115,4 +117,15 @@ public class WorkerListener extends Thread {
         }
         return tmp;
     }
+    
+    public int getPR() {
+        return this.pr;
+    }
+    public void incPR() {
+        this.pr+=1;
+    }
+    /*public void setPr(int pr) {
+        this.pr = pr;
+    }*/
+    
 }
