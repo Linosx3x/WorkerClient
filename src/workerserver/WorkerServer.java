@@ -158,7 +158,7 @@ public class WorkerServer {
                     response = "An error occurred";
                 }
             } while (response.equals(""));
-            System.out.println("Got response: " + response);
+            System.out.println("Got response: " + response + "\n");
             return response;
             //return parameters.get(key);
         } else {
@@ -236,7 +236,7 @@ public class WorkerServer {
             }
 
         }
-        System.out.println("Got response: " + response);
+        System.out.println("Got response: " + response + "\n");
         /*if (response == null) {
          return "WD";
          }*/

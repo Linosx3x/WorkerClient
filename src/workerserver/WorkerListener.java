@@ -50,7 +50,7 @@ public class WorkerListener extends Thread {
                     incoming = in.readLine();
                     System.out.println("Message received: " + incoming);
                     if (incoming != null) {
-                        System.out.println("Worker response: " + incoming + "\n");
+                        System.out.println("Worker response: " + incoming);
                         while (!response.equals("")) {
                             // do nothing
                         }
