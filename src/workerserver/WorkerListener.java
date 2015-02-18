@@ -62,7 +62,7 @@ public class WorkerListener extends Thread {
                 }
             }
         }catch(SocketException e) {
-            System.out.println("Worker is down for mainten\n");
+            System.out.println("Worker is down for maintainance.");
         }catch (Exception e) {
             e.printStackTrace();
         } finally {

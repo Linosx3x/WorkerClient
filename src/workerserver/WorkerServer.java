@@ -154,6 +154,9 @@ public class WorkerServer {
             System.out.println("Sent request: " + request);
             do {
                 response = work[0].getResponse();
+                if (!work[0].isAlive()) {
+                    response = "An error occurred";
+                }
             } while (response.equals(""));
             System.out.println("Got response: " + response);
             return response;
@@ -188,6 +191,7 @@ public class WorkerServer {
         if (min[0] == min[1]) {
             min[1] = -1;
         }
+        int pos=-1;
         for (int i = 0; i < 2; i++) {
             // it's not alive and you know it!
             if (min[i] == -1) {
@@ -197,11 +201,51 @@ public class WorkerServer {
                 set = work[min[i]].setMessage(request);
             } while (!set);
             System.out.println("Sent request: " + request + " to worker number: " + min[i]);
+            String tmp;
+            boolean worker1OK=false;
+            boolean worker2OK=false;
+            boolean addedKey=false;
             do {
-                response = work[min[i]].getResponse();
-            } while (response.equals(""));
+                    response = work[min[i]].getResponse();
+                if (!work[min[i]].isAlive()) {
+                    response = "An error occurred";
+                }
+            }while (response.equals(""));
+            if(!(response.equals("An error occurred"))) {
+                    tmp=response;
+                    if(pos<list.size()&&pos>=0) {
+                        if(list.get(pos).getWorker2()==-1) {
+                            list.get(pos).setWorker2(min[i]);
+                        }
+                    }
+                    for(int j=0;j<list.size();j++)
+                    {
+                        if(list.get(j).getKey().equals(key))
+                        {
+                            //wor[0]=true;
+                            if((list.get(j).getWorker1()>=MAX_WORKERS||list.get(j).getWorker1()<0)&&i==0)
+                            {
+                                list.get(j).setWorker1(min[i]);
+                                worker1OK=true;
+                                break;
+                            }else if(list.get(j).getWorker2()>=MAX_WORKERS||list.get(j).getWorker2()<0) {
+                                list.get(j).setWorker2(min[i]);
+                                worker2OK=true;
+                                break;
+                            }
+                        }
+                    }
+                    if(!addedKey) {
+                        if(i==0) {
+                            list.add(new KeyWorkersPair(key,min[i],-1));
+                        }
+                         response=("");
+                         addedKey=true;
+                    }
+            }
+                   
+                }
             System.out.println("Got response: " + response);
-        }
         /*if (response == null) {
          return "WD";
          }*/
@@ -221,28 +265,27 @@ public class WorkerServer {
             String request = t.getRequestURI().getQuery();
             if (request != null) {
                 result = parseQuery(request);
-                if (result == null || result.equals("AD") || result.equals("WD")) {
+                if (result == null || result.equals("")) {//result.equals("AD") || result.equals("WD")) {
                     success = false;
                 }
                 if (success && type.equalsIgnoreCase("put")) {
                     response = "  <head>\n"
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
-                            + "</head> " + "All went ok";
+                            + "</head> " + result;//"All went ok";
                 } else if (success && type.equalsIgnoreCase("get")) {
                     response = "  <head>\n"
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
                 } else if (!(success)) {
-                    if (result.equals("AD")) {
+                    /*if (result.equals("AD")) {
                         response = "  <head>\n"
                                 + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                                 + "</head> Unfortunately all workers are down";
-                    } else {
+                    } else {*/
                         response = "  <head>\n"
                                 + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                                 + "</head> " + result;
                     }
-                }
             } else {
                 response = "<!DOCTYPE html>\n" + "<html>\n" + "<body>\n" + "\n"
                         + "<form action=\"\" method=\"get\">\n" + "Key:<br>\n"
