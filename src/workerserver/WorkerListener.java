@@ -19,13 +19,13 @@ public class WorkerListener extends Thread {
     private BufferedReader in = null;
     private OutputStream os = null;
     private PrintWriter out = null;
-    private int pr=0;
+    private int pr = 0;
     private long startTime;
 
     public WorkerListener(Socket s, int num) {
         socket = s;
         number = num;
-        startTime=System.currentTimeMillis()/1000;
+        startTime = System.currentTimeMillis() / 1000;
     }
 
     @Override
@@ -40,33 +40,30 @@ public class WorkerListener extends Thread {
             handshake(incoming);
             incoming = null;
             while (true) {
-                /* if (!message.equals("")) {
-                 System.out.println("Message set.");
-                 }*/
                 if (!message.equals("")) {
                     // send message
                     out.println(message);
                     out.flush();
                     System.out.println("Message sent.");
-                    // set message null again
+                    // set message empty again
                     message = "";
                     incoming = in.readLine();
                     System.out.println("Message received: " + incoming);
+                    // if worker is alive
                     if (incoming != null) {
                         System.out.println("Worker response: " + incoming);
                         while (!response.equals("")) {
                             // do nothing
                         }
                         response = incoming;
-                    } else {
-
+                    } else { // if it's not
                         break;
                     }
                 }
             }
-        }catch(SocketException e) {
+        } catch (SocketException e) {
             System.out.println("Worker is down for maintainance.");
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             // clean up
@@ -104,7 +101,7 @@ public class WorkerListener extends Thread {
     public boolean setMessage(String msg) {
         if (message.equals("")) {
             message = msg;
-            this.pr=0;//priority reduced to minimum
+            this.pr = 0; // priority reduced to minimum
             return true;
         }
         return false;
@@ -119,18 +116,17 @@ public class WorkerListener extends Thread {
         }
         return tmp;
     }
-    
+
     public int getPR() {
         return this.pr;
     }
+
     public void incPR() {
-        this.pr+=1;
+        this.pr += 1;
     }
-    /*public void setPr(int pr) {
-        this.pr = pr;
-    }*/
-    public long getUptime()
-    {
-        return (System.currentTimeMillis()/1000)-startTime;
+
+    // get the difference between current time and started time
+    public long getUptime() {
+        return (System.currentTimeMillis() / 1000) - startTime;
     }
 }

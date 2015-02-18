@@ -9,7 +9,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 
@@ -23,15 +22,12 @@ public class WorkerServer {
     private String type;
     private boolean success;
     private ArrayList<KeyWorkersPair> list = new ArrayList<KeyWorkersPair>();
-    private static int workersScheduling[];
 
     public static void main(String[] args) {
         // initialize work[] & workersScheduling[] table
         work = new WorkerListener[MAX_WORKERS];
-        workersScheduling = new int[MAX_WORKERS];
         for (int i = 0; i < MAX_WORKERS; i++) {
             work[i] = null;
-            workersScheduling[i] = -1;
         }
         new WorkerServer();
     }
@@ -50,7 +46,7 @@ public class WorkerServer {
             success = false;
             this.start();
             while (true) {
-                // accept incomaxg connections
+                // accept incoming connections
                 Socket clientSocket = serverSocket.accept();
                 // check if a new worker could be started
                 WorkerListener cliThread = null;
@@ -58,7 +54,6 @@ public class WorkerServer {
                     if (work[i] == null || !work[i].isAlive()) {
                         cliThread = new WorkerListener(clientSocket, i);
                         work[i] = cliThread;
-                        workersScheduling[i] = 0;
                         cliThread.start();
                         break;
                     }
@@ -88,11 +83,11 @@ public class WorkerServer {
         server.start();
     }
 
+    // get the parameters passed in url and do what is to be done
     private String parseQuery(String query) {
         String result = new String();
         if (query != null) {
             String[] pairs = query.split("&");
-            //String[] param=pair.split("=");
             String key = null;
             String value = null;
             try {
@@ -103,11 +98,6 @@ public class WorkerServer {
                     if (param.length > 1) {
                         value = URLDecoder.decode(param[1], System.getProperty("file.encoding"));
                         String response = put(key, value);
-                        /*if (response != null && !response.equals("WD")) {
-                         return response;
-                         } else if (response.equals("WD") || response.equals("AD")) {
-                         return response;
-                         }*/
                         if (response != null && !response.equals("")) {
                             return response;
                         } else {
@@ -125,7 +115,6 @@ public class WorkerServer {
                     if (success) {
                         return result;
                     }
-
                 } else {
                     this.success = false;
                     return "You entered something wrong";
@@ -138,6 +127,7 @@ public class WorkerServer {
         return result;
     }
 
+    // what should be done when a get request should be done
     private String get(String key) {
         //String result = new String();
         //if (parameters.containsKey(key)) {
@@ -149,6 +139,7 @@ public class WorkerServer {
             this.type = "get";
             int[] workers = {-1, -1};
             String[] responses = new String[2];
+            // where is that key located?
             for (int i = 0; i < list.size(); i++) {
                 if (key.equals(list.get(i).getKey())) {
                     workers[0] = list.get(i).getWorker1();
@@ -188,12 +179,12 @@ public class WorkerServer {
                 }
             }
             return response;
-            //return parameters.get(key);
         } else {
             return "Key not found";
         }
     }
 
+    // the key's value (response) must be updated in worker
     private boolean update(String key, String response, int worker) {
         boolean set = false;
         String request = "put " + key + " " + response;
@@ -211,6 +202,7 @@ public class WorkerServer {
         return set;
     }
 
+    // a put request
     private String put(String key, String value) {
         /*String result = null;
          try {
@@ -225,13 +217,7 @@ public class WorkerServer {
         int[] max = new int[2];
         String request = "put " + key + " " + value;
         // calls algorithm, returns 2 workers
-        //do {
         max = schedulingAlgorithm();
-        /*    counter++;
-         } while ((max[0] == -1 || max[1] == -1) && counter <= 5);
-         if (counter > 5) {
-         return "AD";
-         }*/
         if (max[0] == max[1]) {
             max[1] = -1;
         }
@@ -253,15 +239,17 @@ public class WorkerServer {
                     response = "An error occurred";
                 }
             } while (response.equals(""));
+            // if sth is returned
             if (!(response.equals("An error occurred"))) {
+                // if [pos]ition is set and valid, set the second worker
                 if (pos < list.size() && pos >= 0) {
                     if (list.get(pos).getWorker2() == -1) {
                         list.get(pos).setWorker2(max[i]);
                     }
                 } else {
+                    // find key in list, if existed
                     for (int j = 0; j < list.size(); j++) {
                         if (list.get(j).getKey().equals(key)) {
-                            //wor[0]=true; 
                             if ((list.get(j).getWorker1() >= MAX_WORKERS || list.get(j).getWorker1() < 0) && i == 0) {
                                 list.get(j).setWorker1(max[i]);
                                 pos = j;
@@ -270,6 +258,7 @@ public class WorkerServer {
                             }
                         }
                     }
+                    // if not existant, add it!
                     if (!keyExists) {
                         if (i == 0) {
                             list.add(new KeyWorkersPair(key, max[i], -1));
@@ -291,15 +280,8 @@ public class WorkerServer {
             }
         }
         System.out.println("Got response: " + response + "\n");
-        /*if (response == null) {
-         return "WD";
-         }*/
         return response;
-        /*} catch (IOException ex) {
-         Logger.getLogger(RestServer.class.getName()).log(Level.SEVERE, null, ex);
-         }*/
     }
-    //test
 
     class MyHandler implements HttpHandler {
 
@@ -310,7 +292,7 @@ public class WorkerServer {
             String request = t.getRequestURI().getQuery();
             if (request != null) {
                 result = parseQuery(request);
-                if (result == null || result.equals("")) {//result.equals("AD") || result.equals("WD")) {
+                if (result == null || result.equals("")) {
                     success = false;
                 }
                 if (success && type.equalsIgnoreCase("put")) {
@@ -322,11 +304,6 @@ public class WorkerServer {
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
                 } else if (!(success)) {
-                    /*if (result.equals("AD")) {
-                     response = "  <head>\n"
-                     + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
-                     + "</head> Unfortunately all workers are down";
-                     } else {*/
                     response = "  <head>\n"
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
@@ -352,37 +329,6 @@ public class WorkerServer {
     // the algorithm that decides which workers will accept the new key-value pair
     private int[] schedulingAlgorithm() {
         int[] tmp = new int[2];
-        /*int max = -1, sec_max = -1;
-         for (int i = 0; i < MAX_WORKERS; i++) {
-         if(max==-1) {
-         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[max+1].isAlive()) {
-         if (workersScheduling[i] < workersScheduling[max+1]) {
-         sec_max = max+1;
-         max = i;
-         } else if (workersScheduling[i] == workersScheduling[max+1]) {
-         sec_max = i;
-         } else {
-         if (workersScheduling[i] < workersScheduling[sec_max]) {
-         sec_max = i;
-         }
-         }
-         }
-         }
-         if(max!=-1) {
-         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[max].isAlive()) {
-         if (workersScheduling[i] < workersScheduling[max]) {
-         sec_max = max;
-         max = i;
-         } else if (workersScheduling[i] == workersScheduling[max]) {
-         sec_max = i;
-         } else {
-         if (workersScheduling[i] < workersScheduling[sec_max]) {
-         sec_max = i;
-         }
-         }
-         }
-         }
-         }*/
         int max = 0, sec_max = 0;
         for (int i = 0; i < work.length; i++) {
             if (work[i] != null && work[i].isAlive()) {
@@ -398,7 +344,7 @@ public class WorkerServer {
                 }
             }
         }
-        // leaves out the pre-set value if none alive
+        // sets to -1 if none alive
         if (work[max].isAlive()) {
             tmp[0] = max;
         } else {
@@ -409,6 +355,7 @@ public class WorkerServer {
         } else {
             tmp[1] = -1;
         }
+        // increase priorities to non-used workers
         if (tmp[1] != -1 || (tmp[0] != -1 && tmp[1] != -1)) {
             for (int i = 0; i < work.length; i++) {
                 if (work[i] != null && work[i].isAlive() && i != max && i != sec_max) {

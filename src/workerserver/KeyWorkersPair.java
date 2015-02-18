@@ -1,5 +1,6 @@
 package workerserver;
 
+// used by server in order to keep keys paired with workers
 public class KeyWorkersPair {
 
     private String key;
