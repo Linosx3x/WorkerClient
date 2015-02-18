@@ -104,10 +104,10 @@ public class WorkerServer {
                         value = URLDecoder.decode(param[1], System.getProperty("file.encoding"));
                         String response = put(key, value);
                         /*if (response != null && !response.equals("WD")) {
-                            return response;
-                        } else if (response.equals("WD") || response.equals("AD")) {
-                            return response;
-                        }*/
+                         return response;
+                         } else if (response.equals("WD") || response.equals("AD")) {
+                         return response;
+                         }*/
                         if (response != null && !response.equals("")) {
                             return response;
                         } else {
@@ -191,7 +191,7 @@ public class WorkerServer {
         if (min[0] == min[1]) {
             min[1] = -1;
         }
-        int pos=-1;
+        int pos = -1;
         for (int i = 0; i < 2; i++) {
             // it's not alive and you know it!
             if (min[i] == -1) {
@@ -201,43 +201,42 @@ public class WorkerServer {
                 set = work[min[i]].setMessage(request);
             } while (!set);
             System.out.println("Sent request: " + request + " to worker number: " + min[i]);
-            boolean addedKey=false;
+            boolean keyExists = false;
             do {
-                    response = work[min[i]].getResponse();
+                response = work[min[i]].getResponse();
                 if (!work[min[i]].isAlive()) {
                     response = "An error occurred";
                 }
-            }while (response.equals(""));
-            if(!(response.equals("An error occurred"))) {
-                    if(pos<list.size()&&pos>=0) {
-                        if(list.get(pos).getWorker2()==-1) {
-                            list.get(pos).setWorker2(min[i]);
-                        }
+            } while (response.equals(""));
+            if (!(response.equals("An error occurred"))) {
+                if (pos < list.size() && pos >= 0) {
+                    if (list.get(pos).getWorker2() == -1) {
+                        list.get(pos).setWorker2(min[i]);
                     }
-                    for(int j=0;j<list.size();j++)
-                    {
-                        if(list.get(j).getKey().equals(key))
-                        {
+                } else {
+                    for (int j = 0; j < list.size(); j++) {
+                        if (list.get(j).getKey().equals(key)) {
                             //wor[0]=true;
-                            if((list.get(j).getWorker1()>=MAX_WORKERS||list.get(j).getWorker1()<0)&&i==0)
-                            {
+                            if ((list.get(j).getWorker1() >= MAX_WORKERS || list.get(j).getWorker1() < 0) && i == 0) {
                                 list.get(j).setWorker1(min[i]);
-                                pos=j;
+                                pos = j;
+                                keyExists=true;
                                 break;
                             }
                         }
                     }
-                    if(!addedKey) {
-                        if(i==0) {
-                            list.add(new KeyWorkersPair(key,min[i],-1));
-                            pos=list.size()-1;
+                    if (!keyExists) {
+                        if (i == 0) {
+                            list.add(new KeyWorkersPair(key, min[i], -1));
+                            pos = list.size() - 1;
                         }
-                         addedKey=true;
+                        keyExists = true;
                     }
-            }
-                   
                 }
-            System.out.println("Got response: " + response);
+            }
+
+        }
+        System.out.println("Got response: " + response);
         /*if (response == null) {
          return "WD";
          }*/
@@ -270,14 +269,14 @@ public class WorkerServer {
                             + "</head> " + result;
                 } else if (!(success)) {
                     /*if (result.equals("AD")) {
-                        response = "  <head>\n"
-                                + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
-                                + "</head> Unfortunately all workers are down";
-                    } else {*/
-                        response = "  <head>\n"
-                                + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
-                                + "</head> " + result;
-                    }
+                     response = "  <head>\n"
+                     + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
+                     + "</head> Unfortunately all workers are down";
+                     } else {*/
+                    response = "  <head>\n"
+                            + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
+                            + "</head> " + result;
+                }
             } else {
                 response = "<!DOCTYPE html>\n" + "<html>\n" + "<body>\n" + "\n"
                         + "<form action=\"\" method=\"get\">\n" + "Key:<br>\n"
