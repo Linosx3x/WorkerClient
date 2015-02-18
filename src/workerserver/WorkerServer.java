@@ -103,10 +103,15 @@ public class WorkerServer {
                     if (param.length > 1) {
                         value = URLDecoder.decode(param[1], System.getProperty("file.encoding"));
                         String response = put(key, value);
-                        if (response!=null && !response.equals("WD")) {
+                        /*if (response != null && !response.equals("WD")) {
                             return response;
-                        } else if(response.equals("WD")||response.equals("AD")) {
+                        } else if (response.equals("WD") || response.equals("AD")) {
                             return response;
+                        }*/
+                        if (response != null && !response.equals("")) {
+                            return response;
+                        } else {
+                            return "Something wrong happened!";
                         }
                     } else {
                         return "  <head>\n"
@@ -167,31 +172,39 @@ public class WorkerServer {
          parameters.put(key, value);*/
         this.type = "put";
         this.success = true;
-        boolean set,set2;
-        String response="0";
-        int counter=0;
-        int[] min = {-1,-1};
+        boolean set, set2;
+        String response = "";
+        int counter = 0;
+        int[] min = new int[2];
         String request = "put " + key + " " + value;
         // calls algorithm, returns 2 workers
-        do {
-            min=schedulingAlgorithm();
-            counter++;
-        }while((min[0]==-1||min[1]==-1)&&counter<=5);
-        if(counter >5)
-        {
-            return "AD";
+        //do {
+        min = schedulingAlgorithm();
+        /*    counter++;
+         } while ((min[0] == -1 || min[1] == -1) && counter <= 5);
+         if (counter > 5) {
+         return "AD";
+         }*/
+        if (min[0] == min[1]) {
+            min[1] = -1;
         }
-        do {
-            set = work[min[0]].setMessage(request);
-           } while (!set);
-           System.out.println("Sent request: " + request + " to worker number: " + min[0]);
-        do {
-            response = work[min[0]].getResponse();
-        } while (response.equals("0"));
-        System.out.println("Got response: " + response);
-        if(response==null) {
-            return "WD";
+        for (int i = 0; i < 2; i++) {
+            // it's not alive and you know it!
+            if (min[i] == -1) {
+                break;
+            }
+            do {
+                set = work[min[i]].setMessage(request);
+            } while (!set);
+            System.out.println("Sent request: " + request + " to worker number: " + min[i]);
+            do {
+                response = work[min[i]].getResponse();
+            } while (response.equals(""));
+            System.out.println("Got response: " + response);
         }
+        /*if (response == null) {
+         return "WD";
+         }*/
         return response;
         /*} catch (IOException ex) {
          Logger.getLogger(RestServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -208,8 +221,8 @@ public class WorkerServer {
             String request = t.getRequestURI().getQuery();
             if (request != null) {
                 result = parseQuery(request);
-                if(result==null||result.equals("AD")||result.equals("WD")) {
-                    success=false;
+                if (result == null || result.equals("AD") || result.equals("WD")) {
+                    success = false;
                 }
                 if (success && type.equalsIgnoreCase("put")) {
                     response = "  <head>\n"
@@ -220,14 +233,14 @@ public class WorkerServer {
                             + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                             + "</head> " + result;
                 } else if (!(success)) {
-                    if(result.equals("AD")) {
-                        response="  <head>\n"
+                    if (result.equals("AD")) {
+                        response = "  <head>\n"
                                 + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
                                 + "</head> Unfortunately all workers are down";
-                    }else {
+                    } else {
                         response = "  <head>\n"
-                            + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
-                            + "</head> " + result;
+                                + "<meta http-equiv=\"refresh\" content=\"3;URL=http://localhost:8000/store\">\n"
+                                + "</head> " + result;
                     }
                 }
             } else {
@@ -251,39 +264,65 @@ public class WorkerServer {
     // the algorithm that decides which workers will accept the new key-value pair
     private int[] schedulingAlgorithm() {
         int[] tmp = new int[2];
-        int min = -1, sec_min = -1;
+        /*int min = -1, sec_min = -1;
+         for (int i = 0; i < MAX_WORKERS; i++) {
+         if(min==-1) {
+         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min+1].isAlive()) {
+         if (workersScheduling[i] < workersScheduling[min+1]) {
+         sec_min = min+1;
+         min = i;
+         } else if (workersScheduling[i] == workersScheduling[min+1]) {
+         sec_min = i;
+         } else {
+         if (workersScheduling[i] < workersScheduling[sec_min]) {
+         sec_min = i;
+         }
+         }
+         }
+         }
+         if(min!=-1) {
+         if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min].isAlive()) {
+         if (workersScheduling[i] < workersScheduling[min]) {
+         sec_min = min;
+         min = i;
+         } else if (workersScheduling[i] == workersScheduling[min]) {
+         sec_min = i;
+         } else {
+         if (workersScheduling[i] < workersScheduling[sec_min]) {
+         sec_min = i;
+         }
+         }
+         }
+         }
+         }*/
+        int min = 0, sec_min = 0;
         for (int i = 0; i < MAX_WORKERS; i++) {
-            if(min==-1) {
-                if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min+1].isAlive()) {
-                    if (workersScheduling[i] < workersScheduling[min+1]) {
-                        sec_min = min+1;
-                        min = i;
-                    } else if (workersScheduling[i] == workersScheduling[min+1]) {
+            if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive()) {
+                if (workersScheduling[i] < workersScheduling[min]) {
+                    sec_min = min;
+                    min = i;
+                } else if (workersScheduling[i] == workersScheduling[min]) {
+                    sec_min = i;
+                } else {
+                    if (workersScheduling[i] < workersScheduling[sec_min]) {
                         sec_min = i;
-                    } else {
-                        if (workersScheduling[i] < workersScheduling[sec_min]) {
-                            sec_min = i;
-                        }
                     }
                 }
-            }
-            if(min!=-1) {
-                if (workersScheduling[i] != -1 && work[i] != null && work[i].isAlive() && work[min].isAlive()) {
-                    if (workersScheduling[i] < workersScheduling[min]) {
-                        sec_min = min;
-                        min = i;
-                    } else if (workersScheduling[i] == workersScheduling[min]) {
-                        sec_min = i;
-                    } else {
-                        if (workersScheduling[i] < workersScheduling[sec_min]) {
-                            sec_min = i;
-                        }
-                    }
-                }
+            } else {
+                workersScheduling[i] = -1;
             }
         }
-        tmp[0] = min;
-        tmp[1] = sec_min;
+        // leaves out the pre-set value if none alive
+        if (work[min].isAlive()) {
+            tmp[0] = min;
+        } else {
+            tmp[0] = -1;
+        }
+        if (work[sec_min].isAlive()) {
+            tmp[1] = sec_min;
+        } else {
+            tmp[1] = -1;
+        }
         return tmp;
     }
 }
